@@ -424,26 +424,65 @@
       { category: "其他", name: "極品漬鮭魚卵", unit: "1盒", price: 160, qty: 0 }
     ];
 
-    async function initLiff() {
-      try {
-        await liff.init({ liffId: LIFF_ID });
+   async function initLiff() {
+  const userBox = document.getElementById("userBox");
 
-        if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
-        }
+  try {
+    userBox.innerHTML = "正在連接 LINE...";
 
-        currentProfile = await liff.getProfile();
-
-        document.getElementById("userBox").innerHTML =
-          "嗨，<b>" + escapeHtml(currentProfile.displayName) + "</b>，歡迎線上點餐！<br>" +
-          "<span class='user-id'>userId：" + escapeHtml(currentProfile.userId) + "</span>";
-
-      } catch (error) {
-        document.getElementById("userBox").innerHTML =
-          "LIFF 初始化失敗：<br>" + escapeHtml(error.message) + "<br><span class='user-id'>若在瀏覽器測試，部分 LINE 功能可能無法使用。</span>";
-      }
+    if (typeof liff === "undefined") {
+      userBox.innerHTML = "目前是一般瀏覽器測試模式，尚未載入 LINE LIFF。";
+      return;
     }
+
+    await liff.init({
+      liffId: LIFF_ID
+    });
+
+    userBox.innerHTML = "LIFF 已啟動，正在讀取使用者資料...";
+
+    // 在 LINE 內開啟時，通常已經是登入狀態
+    // 先不要自動 liff.login()，避免 LINE WebView 重新導向造成閃退
+    if (!liff.isLoggedIn()) {
+      userBox.innerHTML =
+        "尚未登入 LINE。<br>" +
+        "<span class='user-id'>請從 LINE App 內重新開啟此點餐頁。</span>";
+      return;
+    }
+
+    try {
+      currentProfile = await liff.getProfile();
+
+      userBox.innerHTML =
+        "嗨，<b>" + escapeHtml(currentProfile.displayName) + "</b>，歡迎線上點餐！<br>" +
+        "<span class='user-id'>userId：" + escapeHtml(currentProfile.userId) + "</span>";
+
+    } catch (profileError) {
+      console.error("取得 LINE profile 失敗：", profileError);
+
+      currentProfile = {
+        displayName: "LINE 用戶",
+        userId: "profile-read-failed"
+      };
+
+      userBox.innerHTML =
+        "已進入點餐頁，但暫時無法讀取 LINE 名稱。<br>" +
+        "<span class='user-id'>仍可測試點餐流程。</span>";
+    }
+
+  } catch (error) {
+    console.error("LIFF 初始化錯誤：", error);
+
+    userBox.innerHTML =
+      "LIFF 初始化失敗，但點餐頁仍可測試。<br>" +
+      "<span class='user-id'>" + escapeHtml(error.message) + "</span>";
+
+    currentProfile = {
+      displayName: "測試用戶",
+      userId: "liff-init-failed"
+    };
+  }
+}
 
     function renderTabs() {
       const tabs = ["全部", "刺身", "海鮮", "其他"];
