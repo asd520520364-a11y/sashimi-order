@@ -1,182 +1,670 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>鮮道刺身 - LIFF 測試</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>鮮道刺身 - 線上點餐</title>
 
-    <!-- LINE LIFF SDK -->
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-    <style>
-        body {
-            font-family: Arial, "Microsoft JhengHei", sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        .box {
-            background: white;
-            border-radius: 16px;
-            padding: 24px 20px;
-            margin-top: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
+    body {
+      margin: 0;
+      padding: 0 0 155px;
+      background: #f5f6f8;
+      color: #222;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft JhengHei", Arial, sans-serif;
+    }
 
-        h1 {
-            color: #e63946;
-            text-align: center;
-            margin-bottom: 10px;
-        }
+    .hero {
+      background: linear-gradient(135deg, #e63946, #9b111e);
+      color: white;
+      padding: 26px 18px 28px;
+      border-radius: 0 0 28px 28px;
+      box-shadow: 0 8px 24px rgba(230, 57, 70, 0.25);
+    }
 
-        .status {
-            background: #f1f3f5;
-            border-radius: 10px;
-            padding: 12px;
-            margin-top: 15px;
-            font-size: 14px;
-            line-height: 1.6;
-            word-break: break-all;
-        }
+    .hero h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: 1px;
+    }
 
-        .profile {
-            text-align: center;
-            margin-top: 20px;
-        }
+    .hero p {
+      margin: 8px 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
 
-        .profile img {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 10px;
-        }
+    .status-card {
+      margin: -18px 16px 16px;
+      background: white;
+      border-radius: 18px;
+      padding: 15px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      font-size: 14px;
+      line-height: 1.6;
+    }
 
-        .name {
-            font-size: 20px;
-            font-weight: bold;
-        }
+    .user-id {
+      color: #888;
+      font-size: 12px;
+      word-break: break-all;
+    }
 
-        .user-id {
-            font-size: 13px;
-            color: #777;
-            margin-top: 8px;
-            word-break: break-all;
-        }
+    .section-title {
+      margin: 24px 16px 10px;
+      font-size: 19px;
+      font-weight: 800;
+    }
 
-        .btn {
-            width: 100%;
-            border: none;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 17px;
-            font-weight: bold;
-            background: #e63946;
-            color: white;
-            cursor: pointer;
-        }
+    .section-subtitle {
+      margin: -4px 16px 12px;
+      color: #888;
+      font-size: 13px;
+    }
 
-        .btn.secondary {
-            background: #333;
-        }
-    </style>
+    .category-tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 16px 12px;
+      scrollbar-width: none;
+    }
+
+    .category-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      border: none;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: white;
+      color: #555;
+      font-weight: 700;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: #e63946;
+      color: white;
+    }
+
+    .menu {
+      margin: 0 16px;
+    }
+
+    .item {
+      background: white;
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.065);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .item-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-name {
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .item-info {
+      font-size: 13px;
+      color: #777;
+      margin-top: 5px;
+    }
+
+    .item-price {
+      color: #e63946;
+      font-weight: 900;
+      margin-top: 7px;
+      font-size: 17px;
+    }
+
+    .qty {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-shrink: 0;
+    }
+
+    .qty button {
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 50%;
+      font-size: 22px;
+      font-weight: 900;
+      background: #e63946;
+      color: white;
+      line-height: 1;
+    }
+
+    .qty button.minus {
+      background: #333;
+    }
+
+    .qty span {
+      min-width: 24px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .form-card {
+      background: white;
+      margin: 0 16px 14px;
+      padding: 16px;
+      border-radius: 18px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.065);
+    }
+
+    .form-card label.title {
+      display: block;
+      font-weight: 900;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      font-size: 15px;
+      outline: none;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 78px;
+      resize: vertical;
+    }
+
+    .radio-grid,
+    .check-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f1f3f5;
+      font-size: 15px;
+      line-height: 1.3;
+    }
+
+    .option input {
+      transform: scale(1.15);
+    }
+
+    .hint {
+      color: #888;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 9px;
+    }
+
+    .transfer-box {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #fff3cd;
+      color: #7a5a00;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .order-preview {
+      white-space: pre-wrap;
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 13px;
+      color: #444;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      padding: 13px 16px 22px;
+      box-shadow: 0 -6px 24px rgba(0,0,0,0.13);
+      z-index: 20;
+    }
+
+    .bottom-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .total {
+      color: #e63946;
+      font-size: 25px;
+    }
+
+    .submit-btn {
+      width: 100%;
+      border: none;
+      border-radius: 15px;
+      background: #e63946;
+      color: white;
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .submit-btn:disabled {
+      background: #aaa;
+    }
+
+    .small-btn {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      background: #333;
+      color: white;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 800;
+      margin-top: 10px;
+    }
+
+    .empty {
+      color: #777;
+      background: white;
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    }
+  </style>
 </head>
+
 <body>
 
-    <div class="box">
-        <h1>🍣 鮮道刺身</h1>
-        <p style="text-align:center;">LIFF 使用者資料測試</p>
+  <div class="hero">
+    <h1>🍣 鮮道刺身</h1>
+    <p>@SASHIMI_TAICHUNG｜新鮮・送到</p>
+  </div>
 
-        <div class="status" id="status">
-            正在初始化 LIFF...
-        </div>
+  <div class="status-card" id="userBox">
+    正在讀取 LINE 使用者資料...
+  </div>
 
-        <div class="profile" id="profileBox" style="display:none;">
-            <img id="picture" src="" alt="LINE 使用者頭像">
-            <div class="name" id="displayName"></div>
-            <div class="user-id" id="userId"></div>
-        </div>
+  <div class="section-title">菜單</div>
+  <div class="section-subtitle">請選擇商品數量</div>
 
-        <button class="btn" onclick="showUserData()">顯示目前抓到的用戶資料</button>
-        <button class="btn secondary" onclick="closeLiff()">關閉視窗</button>
+  <div class="category-tabs" id="categoryTabs"></div>
+  <div class="menu" id="menu"></div>
+
+  <div class="section-title">取餐與付款</div>
+
+  <div class="form-card">
+    <label class="title">取餐方式</label>
+    <div class="radio-grid">
+      <label class="option">
+        <input type="radio" name="orderType" value="自取" checked onchange="updatePlaceholder()">
+        自取
+      </label>
+      <label class="option">
+        <input type="radio" name="orderType" value="外送" onchange="updatePlaceholder()">
+        外送
+      </label>
+    </div>
+    <div class="hint">目前外送費先由店家確認，正式版後續可加入外送費自動計算。</div>
+  </div>
+
+  <div class="form-card">
+    <label class="title" id="addressLabel">自取時間 / 外送地址</label>
+    <input type="text" id="address" placeholder="例：18:30 自取 / 台中市西屯區XX路XX號">
+  </div>
+
+  <div class="form-card">
+    <label class="title">付款方式</label>
+    <div class="radio-grid">
+      <label class="option">
+        <input type="radio" name="payment" value="現金" checked onchange="toggleTransferBox()">
+        現金
+      </label>
+      <label class="option">
+        <input type="radio" name="payment" value="轉帳" onchange="toggleTransferBox()">
+        轉帳
+      </label>
     </div>
 
-    <script>
-        const LIFF_ID = "2010559989-TraEz6iS";
+    <div class="transfer-box" id="transferBox">
+      💡 轉帳說明：<br>
+      請下單後依店家提供帳號轉帳。<br>
+      備註欄可填寫「帳號後五碼」，方便店家核對。
+    </div>
+  </div>
 
-        let currentProfile = null;
+  <div class="section-title">客製化選項</div>
 
-        async function main() {
-            try {
-                document.getElementById("status").innerText = "LIFF 初始化中...";
+  <div class="form-card">
+    <label class="title">常用需求</label>
+    <div class="check-grid">
+      <label class="option"><input type="checkbox" value="不要哇沙米"> 不要哇沙米</label>
+      <label class="option"><input type="checkbox" value="醬油多一點"> 醬油多一點</label>
+      <label class="option"><input type="checkbox" value="切厚一點"> 切厚一點</label>
+      <label class="option"><input type="checkbox" value="切薄一點"> 切薄一點</label>
+      <label class="option"><input type="checkbox" value="需要餐具"> 需要餐具</label>
+      <label class="option"><input type="checkbox" value="不要餐具"> 不要餐具</label>
+    </div>
+  </div>
 
-                await liff.init({
-                    liffId: LIFF_ID
-                });
+  <div class="form-card">
+    <label class="title">其他備註</label>
+    <textarea id="note" placeholder="例：鮭魚想切厚、轉帳後五碼 12345、不要蔥、請先電話確認"></textarea>
+  </div>
 
-                document.getElementById("status").innerText =
-                    "LIFF 初始化成功。正在確認登入狀態...";
+  <div class="section-title">訂單預覽</div>
+  <div class="form-card">
+    <div class="order-preview" id="orderPreview"></div>
+    <button class="small-btn" onclick="previewOrder()">產生訂單預覽</button>
+  </div>
 
-                if (!liff.isLoggedIn()) {
-                    document.getElementById("status").innerText =
-                        "尚未登入 LINE，準備導向登入...";
-                    liff.login();
-                    return;
-                }
+  <div class="bottom-bar">
+    <div class="bottom-row">
+      <span>總金額</span>
+      <span class="total" id="totalPrice">$0</span>
+    </div>
+    <button class="submit-btn" id="submitBtn" onclick="submitOrder()">送出訂單</button>
+  </div>
 
-                currentProfile = await liff.getProfile();
+  <script>
+    const LIFF_ID = "2010559989-TraEz6iS";
 
-                document.getElementById("status").innerText =
-                    "成功取得 LINE 使用者資料。";
+    let currentProfile = null;
+    let activeCategory = "全部";
 
-                document.getElementById("profileBox").style.display = "block";
-                document.getElementById("displayName").innerText =
-                    currentProfile.displayName;
+    const products = [
+      { category: "刺身", name: "極上熟成鮭魚", unit: "12片", price: 350, qty: 0 },
+      { category: "刺身", name: "熟成深海鮪魚", unit: "12片", price: 350, qty: 0 },
+      { category: "刺身", name: "清甜旗魚刺身", unit: "15片", price: 300, qty: 0 },
+      { category: "刺身", name: "御選黃金尼信", unit: "15片", price: 300, qty: 0 },
+      { category: "刺身", name: "極鮮三品刺身", unit: "12片", price: 350, qty: 0 },
+      { category: "海鮮", name: "北海道生食級干貝", unit: "5顆", price: 350, qty: 0 },
+      { category: "海鮮", name: "日本兵庫縣產生蠔", unit: "2顆", price: 200, qty: 0 },
+      { category: "海鮮", name: "紋甲花枝姿造", unit: "10片", price: 200, qty: 0 },
+      { category: "海鮮", name: "小甜蝦刺身", unit: "12尾", price: 180, qty: 0 },
+      { category: "海鮮", name: "沁甜極鮮赤蝦", unit: "10尾", price: 350, qty: 0 },
+      { category: "其他", name: "極品漬鮭魚卵", unit: "1盒", price: 160, qty: 0 }
+    ];
 
-                document.getElementById("userId").innerText =
-                    "userId：" + currentProfile.userId;
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
 
-                if (currentProfile.pictureUrl) {
-                    document.getElementById("picture").src =
-                        currentProfile.pictureUrl;
-                } else {
-                    document.getElementById("picture").style.display = "none";
-                }
-
-            } catch (error) {
-                console.error(error);
-                document.getElementById("status").innerText =
-                    "LIFF 發生錯誤：" + error.message;
-            }
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
         }
 
-        function showUserData() {
-            if (!currentProfile) {
-                alert("目前還沒有抓到 LINE 使用者資料。");
-                return;
+        currentProfile = await liff.getProfile();
+
+        document.getElementById("userBox").innerHTML =
+          "嗨，<b>" + escapeHtml(currentProfile.displayName) + "</b>，歡迎線上點餐！<br>" +
+          "<span class='user-id'>userId：" + escapeHtml(currentProfile.userId) + "</span>";
+
+      } catch (error) {
+        document.getElementById("userBox").innerHTML =
+          "LIFF 初始化失敗：<br>" + escapeHtml(error.message) + "<br><span class='user-id'>若在瀏覽器測試，部分 LINE 功能可能無法使用。</span>";
+      }
+    }
+
+    function renderTabs() {
+      const tabs = ["全部", "刺身", "海鮮", "其他"];
+      const box = document.getElementById("categoryTabs");
+
+      box.innerHTML = tabs.map(tab => `
+        <button class="tab ${tab === activeCategory ? "active" : ""}" onclick="setCategory('${tab}')">
+          ${tab}
+        </button>
+      `).join("");
+    }
+
+    function setCategory(category) {
+      activeCategory = category;
+      renderTabs();
+      renderMenu();
+    }
+
+    function renderMenu() {
+      const menu = document.getElementById("menu");
+      const filtered = activeCategory === "全部"
+        ? products
+        : products.filter(item => item.category === activeCategory);
+
+      if (filtered.length === 0) {
+        menu.innerHTML = `<div class="empty">目前沒有商品</div>`;
+        return;
+      }
+
+      menu.innerHTML = filtered.map(item => {
+        const index = products.indexOf(item);
+
+        return `
+          <div class="item">
+            <div class="item-main">
+              <div class="item-name">${escapeHtml(item.name)}</div>
+              <div class="item-info">${escapeHtml(item.unit)}</div>
+              <div class="item-price">$${item.price}</div>
+            </div>
+            <div class="qty">
+              <button class="minus" onclick="changeQty(${index}, -1)">−</button>
+              <span id="qty-${index}">${item.qty}</span>
+              <button onclick="changeQty(${index}, 1)">+</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function changeQty(index, amount) {
+      products[index].qty += amount;
+      if (products[index].qty < 0) products[index].qty = 0;
+
+      const qtyEl = document.getElementById("qty-" + index);
+      if (qtyEl) qtyEl.innerText = products[index].qty;
+
+      updateTotal();
+    }
+
+    function updateTotal() {
+      const total = getTotal();
+      document.getElementById("totalPrice").innerText = "$" + total;
+    }
+
+    function getTotal() {
+      return products.reduce((sum, item) => sum + item.price * item.qty, 0);
+    }
+
+    function getSelectedItems() {
+      return products.filter(item => item.qty > 0);
+    }
+
+    function updatePlaceholder() {
+      const type = document.querySelector("input[name='orderType']:checked").value;
+      const input = document.getElementById("address");
+      const label = document.getElementById("addressLabel");
+
+      if (type === "自取") {
+        label.innerText = "自取時間";
+        input.placeholder = "例：今天 18:30 自取";
+      } else {
+        label.innerText = "外送地址";
+        input.placeholder = "例：台中市西屯區XX路XX號";
+      }
+    }
+
+    function toggleTransferBox() {
+      const payment = document.querySelector("input[name='payment']:checked").value;
+      document.getElementById("transferBox").style.display = payment === "轉帳" ? "block" : "none";
+    }
+
+    function getCustomOptions() {
+      return Array.from(document.querySelectorAll(".check-grid input[type='checkbox']:checked"))
+        .map(input => input.value);
+    }
+
+    function buildOrderText() {
+      const selectedItems = getSelectedItems();
+      const total = getTotal();
+      const orderType = document.querySelector("input[name='orderType']:checked").value;
+      const payment = document.querySelector("input[name='payment']:checked").value;
+      const address = document.getElementById("address").value.trim();
+      const note = document.getElementById("note").value.trim();
+      const customOptions = getCustomOptions();
+
+      let itemsText = "";
+      selectedItems.forEach(item => {
+        itemsText += `・${item.name}（${item.unit}）x${item.qty} = $${item.price * item.qty}\n`;
+      });
+
+      const displayName = currentProfile ? currentProfile.displayName : "測試用戶";
+      const userId = currentProfile ? currentProfile.userId : "無";
+
+      const orderText =
+`【鮮道刺身 訂單】
+
+訂購人：${displayName}
+LINE userId：${userId}
+
+【商品明細】
+${itemsText}
+【金額】
+總金額：$${total}
+
+【取餐資訊】
+取餐方式：${orderType}
+${orderType === "自取" ? "自取時間" : "外送地址"}：${address}
+
+【付款方式】
+${payment}
+
+【客製化】
+${customOptions.length ? customOptions.join("、") : "無"}
+
+【備註】
+${note || "無"}
+
+請店家確認訂單。`;
+
+      return orderText;
+    }
+
+    function validateOrder() {
+      if (!currentProfile && typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) {
+        alert("尚未取得 LINE 使用者資料，請重新開啟頁面。");
+        return false;
+      }
+
+      if (getSelectedItems().length === 0) {
+        alert("請至少選擇一樣商品。");
+        return false;
+      }
+
+      const address = document.getElementById("address").value.trim();
+      if (!address) {
+        const type = document.querySelector("input[name='orderType']:checked").value;
+        alert(type === "自取" ? "請填寫自取時間。" : "請填寫外送地址。");
+        return false;
+      }
+
+      return true;
+    }
+
+    function previewOrder() {
+      if (!validateOrder()) return;
+
+      const text = buildOrderText();
+      const preview = document.getElementById("orderPreview");
+
+      preview.style.display = "block";
+      preview.innerText = text;
+    }
+
+    async function submitOrder() {
+      if (!validateOrder()) return;
+
+      const orderText = buildOrderText();
+      const submitBtn = document.getElementById("submitBtn");
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = "送出中...";
+
+      try {
+        if (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) {
+          await liff.sendMessages([
+            {
+              type: "text",
+              text: orderText
             }
+          ]);
 
-            alert(
-                "LINE 名稱：" + currentProfile.displayName + "\\n" +
-                "userId：" + currentProfile.userId
-            );
-
-            console.log("目前 LINE 使用者資料：", currentProfile);
+          alert("訂單已送出，請等待店家確認。");
+          liff.closeWindow();
+        } else {
+          alert(orderText);
         }
+      } catch (error) {
+        alert("訂單已產生，但傳送到 LINE 失敗，請截圖給店家。\n\n" + orderText);
+        console.error(error);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = "送出訂單";
+      }
+    }
 
-        function closeLiff() {
-            if (typeof liff !== "undefined" && liff.isInClient()) {
-                liff.closeWindow();
-            } else {
-                alert("目前不是在 LINE 內開啟，所以無法關閉 LIFF 視窗。");
-            }
-        }
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
-        main();
-    </script>
+    renderTabs();
+    renderMenu();
+    updateTotal();
+    updatePlaceholder();
+    toggleTransferBox();
+    initLiff();
+  </script>
 
 </body>
 </html>
