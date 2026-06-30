@@ -3,33 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>鮮道刺身測試頁</title>
+    <title>鮮道刺身 - LIFF 測試</title>
+
+    <!-- LINE LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
     <style>
         body {
             font-family: Arial, "Microsoft JhengHei", sans-serif;
             background: #f5f5f5;
+            margin: 0;
             padding: 20px;
-            text-align: center;
+            color: #333;
         }
 
         .box {
             background: white;
             border-radius: 16px;
-            padding: 30px 20px;
-            margin-top: 50px;
+            padding: 24px 20px;
+            margin-top: 30px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         h1 {
             color: #e63946;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            background: #f1f3f5;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 14px;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+
+        .profile {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .profile img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+
+        .name {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .user-id {
+            font-size: 13px;
+            color: #777;
+            margin-top: 8px;
+            word-break: break-all;
+        }
+
+        .btn {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 17px;
+            font-weight: bold;
+            background: #e63946;
+            color: white;
+            cursor: pointer;
+        }
+
+        .btn.secondary {
+            background: #333;
         }
     </style>
 </head>
 <body>
+
     <div class="box">
         <h1>🍣 鮮道刺身</h1>
-        <p>GitHub Pages 測試成功</p>
-        <p>下一步準備接 LINE LIFF</p>
+        <p style="text-align:center;">LIFF 使用者資料測試</p>
+
+        <div class="status" id="status">
+            正在初始化 LIFF...
+        </div>
+
+        <div class="profile" id="profileBox" style="display:none;">
+            <img id="picture" src="" alt="LINE 使用者頭像">
+            <div class="name" id="displayName"></div>
+            <div class="user-id" id="userId"></div>
+        </div>
+
+        <button class="btn" onclick="showUserData()">顯示目前抓到的用戶資料</button>
+        <button class="btn secondary" onclick="closeLiff()">關閉視窗</button>
     </div>
+
+    <script>
+        const LIFF_ID = "2010559989-TraEz6iS";
+
+        let currentProfile = null;
+
+        async function main() {
+            try {
+                document.getElementById("status").innerText = "LIFF 初始化中...";
+
+                await liff.init({
+                    liffId: LIFF_ID
+                });
+
+                document.getElementById("status").innerText =
+                    "LIFF 初始化成功。正在確認登入狀態...";
+
+                if (!liff.isLoggedIn()) {
+                    document.getElementById("status").innerText =
+                        "尚未登入 LINE，準備導向登入...";
+                    liff.login();
+                    return;
+                }
+
+                currentProfile = await liff.getProfile();
+
+                document.getElementById("status").innerText =
+                    "成功取得 LINE 使用者資料。";
+
+                document.getElementById("profileBox").style.display = "block";
+                document.getElementById("displayName").innerText =
+                    currentProfile.displayName;
+
+                document.getElementById("userId").innerText =
+                    "userId：" + currentProfile.userId;
+
+                if (currentProfile.pictureUrl) {
+                    document.getElementById("picture").src =
+                        currentProfile.pictureUrl;
+                } else {
+                    document.getElementById("picture").style.display = "none";
+                }
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById("status").innerText =
+                    "LIFF 發生錯誤：" + error.message;
+            }
+        }
+
+        function showUserData() {
+            if (!currentProfile) {
+                alert("目前還沒有抓到 LINE 使用者資料。");
+                return;
+            }
+
+            alert(
+                "LINE 名稱：" + currentProfile.displayName + "\\n" +
+                "userId：" + currentProfile.userId
+            );
+
+            console.log("目前 LINE 使用者資料：", currentProfile);
+        }
+
+        function closeLiff() {
+            if (typeof liff !== "undefined" && liff.isInClient()) {
+                liff.closeWindow();
+            } else {
+                alert("目前不是在 LINE 內開啟，所以無法關閉 LIFF 視窗。");
+            }
+        }
+
+        main();
+    </script>
+
 </body>
 </html>
